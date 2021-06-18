@@ -1,0 +1,242 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0043)http://www.borg.com/~jglatt/tech/lowaud.htm -->
+<HTML><HEAD><TITLE>Low Level Digital Audio API</TITLE>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<META content="MSHTML 5.50.4134.100" name=GENERATOR></HEAD>
+<BODY text=#000000 vLink=purple aLink=purple link=blue bgColor=#ffffff>Using the 
+Low level Digital Audio API, you need to first call waveOutOpen() or 
+waveInOpen() to open some Digital Audio device for output (use its Digital to 
+Analog Converter to play audio) or input (use its Analog to Digital Converter to 
+record audio) respectively. 
+<P>In order to write out Digital Audio data to a particular device's DAC, you 
+need to first call waveOutOpen() once, passing it the Device ID of that desired 
+device. Then, you can subsequently call a function to send blocks of Digital 
+Audio data to that device's DAC. One of the other parameters you pass is a 
+pointer to a WAVEFORMATEX structure. You fill in the fields of this structure 
+(prior to calling waveOutOpen) to tell the device such things as the sample rate 
+and bit resolution of the digital audio data you intend to play, as well as 
+whether it is Mono (1 channel) or stereo (2 channels).</P>
+<P>In order to read incoming Digital Audio data from a particular device's ADC, 
+you need to first call waveInOpen() once, passing it the Device ID of that 
+desired device. Then, Windows will subsequently pass your program blocks of 
+incoming Digital Audio from that device's ADC. One of the other parameters you 
+pass is a pointer to a WAVEFORMATEX structure. You fill in the fields of this 
+structure (prior to calling waveInOpen) to tell the device such things what 
+sample rate and bit resolution to use when recording the digital audio data, as 
+well as whether to record in Mono (1 channel) or stereo (2 channels).</P>
+<P>After you're done recording or playing Digital Audio on a device (and have no 
+further use for it), you must close that device.</P>
+<P>Think of a Digital Audio device like a file. You open it, you read or write 
+to it, and then you close it.</P>
+<H2><FONT color=#ff8040>Easy way to choose a Digital Audio device for input or 
+output</FONT></H2>How does your program choose a Digital Audio device for input 
+or output? There are several different approaches you can take, depending upon 
+how fancy and flexible you want your program to be. 
+<P>Recall that Windows maintains separate lists of the devices which are capable 
+of recording Digital Audio data, and the devices capable of playing Digital 
+Audio data. Pass the value WAVE_MAPPER as the Device ID to open the "preferred" 
+Digital Audio Input device and Digital Audio Output device respectively. So, if 
+you simply want to open the preferred Digital Audio Output device, then use a 
+Device ID of WAVE_MAPPER with waveOutOpen() as so:</P><PRE><FONT size=3><B><FONT color=green>unsigned long</FONT> result;
+HWAVEOUT      outHandle;
+WAVEFORMATEX  waveFormat;
+
+<FONT color=brown>/* Initialize the WAVEFORMATEX for 16-bit, 44KHz, stereo */</FONT>
+waveFormat.wFormatTag = WAVE_FORMAT_PCM;
+waveFormat.nChannels = 2;
+waveFormat.nSamplesPerSec = 44100;
+waveFormat.wBitsPerSample = 16;
+waveFormat.nBlockAlign = waveFormat.nChannels * (waveFormat.wBitsPerSample/8);
+waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;
+waveFormat.cbSize = 0;
+
+<FONT color=brown>/* Open the preferred Digital Audio Out device. Note: myWindow is a handle to some open window */</FONT>
+result = waveOutOpen(&amp;outHandle, WAVE_MAPPER, &amp;waveFormat, (DWORD)myWindow, 0, CALLBACK_WINDOW);
+<FONT color=green>if</FONT> (result)
+{
+   printf("There was an error opening the preferred Digital Audio Out device!\r\n");
+}
+</B></FONT></PRE><B>Note:</B> If the preferred device does not support your 
+desired choice of sample rate and channels, then Windows will instead open some 
+other device that does (assuming that there is such other device available). 
+<P>Of course, if the user has no device installed capable of outputting or 
+playing Digital Audio data, the above call returns an error, so always check 
+that return value.</P>
+<P>Likewise, use a Device ID of WAVE_MAPPER with waveInOpen() to open the 
+preferred Digital Audio Input device. (Note that these two preferred devices may 
+or may not be components of the same card. But that is irrelevant to your 
+purposes. The only caveat is that if they are components upon the same card, the 
+card's driver needs to be full duplex in order to simultaneously open both the 
+Digital Audio input and output. In this way, your program can play back 
+previously recorded waveforms while recording new waveforms. Without a full 
+duplex driver, you have to open for recording, record a waveform, close the 
+device using waveInClose(), and open for playback. Some sound card designs do 
+not allow the card to simultaneously record and play digital audio, so they have 
+only half duplex drivers).</P><PRE><FONT size=3><B><FONT color=green>unsigned long</FONT> result;
+HWAVEIN      inHandle;
+WAVEFORMATEX waveFormat;
+
+<FONT color=green>#define</FONT> BITS 16
+
+<FONT color=brown>/* Initialize the WAVEFORMATEX for 16-bit, 44KHz, stereo */</FONT>
+waveFormat.wFormatTag = WAVE_FORMAT_PCM;
+waveFormat.nChannels = 2;
+waveFormat.nSamplesPerSec = 44100;
+waveFormat.wBitsPerSample = 16;
+waveFormat.nBlockAlign = waveFormat.nChannels * (waveFormat.wBitsPerSample/8);
+waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;
+waveFormat.cbSize = 0;
+
+<FONT color=brown>/* Open the preferred Digital Audio In device */</FONT>
+result = waveInOpen(&amp;inHandle, WAVE_MAPPER, &amp;waveFormat, (DWORD)myWindow, 0, CALLBACK_WINDOW);
+<FONT color=green>if</FONT> (result)
+{
+   printf("There was an error opening the preferred Digital Audio In device!\r\n");
+}
+</B></FONT></PRE>
+<P>So what actually is the preferred Digital Audio Output device? Well, that's 
+whatever device that the user choose from the dropdown list of Digital Audio 
+Output devices under "Playback" of Control Panel's <EM>Multimedia</EM> utility 
+(ie, on the "Audio" page). The list on this page is Windows actually displaying 
+all of the names that were added to its list of devices capable of outputting or 
+playing Digital Audio data.</P>
+<P>The preferred Digital Audio Input device is whatever device that the user 
+chooses from the dropdown list of Digital Audio Input devices under "Recording" 
+of Control Panel's <EM>Multimedia</EM> utility (ie, on the "Audio" page). The 
+list on this page is Windows actually displaying all of the names that were 
+added to its list of devices capable of inputting or recording Digital Audio 
+data. 
+<H2><FONT color=#ff8040>The most flexible way to choose a Digital Audio 
+device</FONT></H2>The most flexible way would be to present the user with all of 
+the names in the list of Digital Audio Output devices and let him choose which 
+ones he wants (or if your program supports multiple Digital Audio output 
+devices, you may wish to let him pick out several names from the list, and 
+assign each digital audio "track" to one of those Device IDs. This is how 
+professional sequencers implement support for multiple cards/outputs, in 
+addition to perhaps implementing virtual tracks). 
+<P>Whereas Windows maintains separate lists of Digital Audio Input and Output 
+devices, so too, Windows has separate functions for querying the devices in each 
+list.</P>
+<P>Windows has a function that you can call to determine how many device names 
+are in the list of devices that support outputting or playing Digital Audio 
+data. This function is called waveOutGetNumDevs(). This returns the number of 
+devices in the list. Remember that the Device IDs start with 0 and increment. So 
+if Windows says that there are 3 devices in the list, then you know that their 
+Device IDs are 0, 1, and 2 respectively. You then use these Device IDs with 
+other Windows functions. For example, there is a function you can call to get 
+information about one of the devices in the list, for example its name, and what 
+sort of other features it has such as what sample rates it supports. You pass 
+the Device ID of the device which you want to get information about (as well as 
+a pointer to a special structure called a WAVEOUTCAPS into which Windows puts 
+the info about the device), The name of the function to get information about a 
+particular Digital Audio Output device is waveOutGetDevCaps().</P>
+<P>Here then is an example of going through the list of Digital Audio Output 
+devices, and printing the name of each one:</P><PRE><FONT size=3><B>WAVEOUTCAPS     woc;
+<FONT color=green>unsigned long</FONT>   iNumDevs, i;
+
+<FONT color=brown>/* Get the number of Digital Audio Out devices in this computer */</FONT>
+iNumDevs = waveOutGetNumDevs();
+
+<FONT color=brown>/* Go through all of those devices, displaying their names */</FONT>
+<FONT color=green>for</FONT> (i = 0; i &lt; iNumDevs; i++)
+{
+    <FONT color=brown>/* Get info about the next device */</FONT>
+    <FONT color=green>if</FONT> (!waveOutGetDevCaps(i, &amp;woc, <FONT color=green>sizeof</FONT>(WAVEOUTCAPS)))
+    {
+        <FONT color=brown>/* Display its Device ID and name */</FONT>
+        printf("Device ID #%u: %s\r\n", i, woc.szPname);
+    }
+}
+</B></FONT></PRE>
+<P>Likewise with Digital Audio Input devices, Windows has a function that you 
+can call to determine how many device names are in the list of devices that 
+support inputting or recording Digital Audio data. This function is called 
+waveInGetNumDevs(). This returns the number of devices in the list. Again, the 
+Device IDs start with 0 and increment. There is a function you can call to get 
+information about one of the devices in the list, for example its name, and what 
+sort of other features it has such as what sample rates it supports. You pass 
+the Device ID of the device which you want to get information about (as well as 
+a pointer to a special structure called a WAVEINCAPS into which Windows puts the 
+info about the device), The name of the function to get information about a 
+particular Digital Audio Input device is waveInGetDevCaps().</P>
+<P>Here then is an example of going through the list of Digital Audio Input 
+devices, and printing the name of each one:</P><PRE><FONT size=3><B>WAVEINCAPS     wic;
+<FONT color=green>unsigned long</FONT>    iNumDevs, i;
+
+<FONT color=brown>/* Get the number of Digital Audio In devices in this computer */</FONT>
+iNumDevs = waveInGetNumDevs();
+
+<FONT color=brown>/* Go through all of those devices, displaying their names */</FONT>
+<FONT color=green>for</FONT> (i = 0; i &lt; iNumDevs; i++)
+{
+    <FONT color=brown>/* Get info about the next device */</FONT>
+    <FONT color=green>if</FONT> (!waveInGetDevCaps(i, &amp;wic, <FONT color=green>sizeof</FONT>(WAVEINCAPS)))
+    {
+        <FONT color=brown>/* Display its Device ID and name */</FONT>
+        printf("Device ID #%u: %s\r\n", i, wic.szPname);
+    }
+}
+</B></FONT></PRE>
+<H2><FONT color=#ff8040>Recording Digital Audio</FONT></H2>The device's driver 
+manages the actual recording of data. You can start and stop this process with 
+waveInStart() and waveInStop(). While a driver records digital audio, it stores 
+data into a small fixed-size buffer (for example 16K). When that buffer is full, 
+the driver "signals" your program that the buffer is full and needs to be 
+processed by your program (for example, your program may save that 16K of data 
+to a disk file if your program is doing hard disk recording). The driver then 
+goes on to store another "block" (ie, 16K section) of data into a second, 
+similiarly-sized buffer. It's assumed that your program is simultaneously 
+processing that first buffer of data, while the driver is recording into the 
+second buffer. It's also assumed that your program finishes processing that 
+first buffer before the second buffer is full. When the driver fills that second 
+buffer, it again signals your program that now the second buffer needs to be 
+processed. While your program is processing the second buffer, the driver is 
+storing more audio data into the now-empty, first buffer. Etc. This all happens 
+nonstop, so the process of recording digital audio is that two (or more if 
+desired) buffers are constantly being filled by the driver (alternating between 
+the 2 buffers), while your program is constantly processing each buffer 
+immediately upon being signalled that the buffer is full. So, you end up dealing 
+with a series of "blocks of data". 
+<P>In fact, your program supplies each buffer to the driver, using 
+waveInAddBuffer() (and waveInPrepareHeader() to initialize it). You supply the 
+first 2 buffers to the driver using waveInAddBuffer() before recording. Every 
+time that you're signaled that a buffer is filled, you need to use 
+waveInAddBuffer() to indicate what buffer the driver will use after it finishes 
+filling whatever buffer it is currently filling. (For double-buffering, that 
+will be the same buffer that you're processing out).</P>
+<H2><FONT color=#ff8040>Playing Digital Audio</FONT></H2>
+<P>Playback is also done via "blocks of data". Here, your application reads a 
+block of data from the WAVE file on disk (for example, you may read the next 16K 
+of the file into a 16K buffer). (You must use waveOutPrepareHeader() to 
+initialize the buffer before reading into it). You pass this block to the driver 
+for playback via waveOutWrite(). While the driver is playing this block, you're 
+reading in another block of data into a second buffer. When the driver is 
+finished playing the first block, it signals your program that it needs another 
+block, and your driver passes that second buffer via waveOutWrite(). Your 
+program will now read in the next block of data into the first buffer while the 
+driver is playing the second buffer. Etc. Again, this is all non-stop until the 
+WAVE is fully played (at which point you can call waveOutReset() to stop the 
+driver's playback process).</P>
+<P>So how does the driver "signal" your program? You've got a few choices. You 
+can choose to have the driver send messages to your program's Window, for 
+example, the MM_WOM_DONE message is sent each time the driver finishes playing a 
+given buffer. Parameters with that message include the address of the given 
+buffer (actually the address of the WAVEHDR structure which encompasses the 
+buffer) and the device's handle (ie, the handle supplied to you when you opened 
+the device). Or, you can have the driver automatically call a particular 
+function in your program (ie, a "callback") passing such parameters. There are a 
+couple of other choices such as having the driver use event signals or start a 
+particular thread in your program.</P>
+<P>You tell the driver how you want to be signalled by setting certain flags in 
+one of the arguments to waveInOpen() or waveOutOpen().</P>
+<P>You can download my <A 
+href="http://www.borg.com/~jglatt/midi/software/dev/winapi/waveply1.zip">WavePly1</A> 
+C example to show how to play a WAVE file using a callback and double-buffering. 
+Included are the Project Workspace files for Visual C++ 4.0, but since it is a 
+console app, any Windows C compiler should be able to compile it. Remember that 
+all apps should include MMSYSTEM.H and link with WINMM.LIB (or MMSYSTEM.LIB if 
+Win3.1). This is a ZIP archive. Use an unzip utility that supports long 
+filenames.</P>
+<H2><FONT color=#ff8040>Setting volume</FONT></H2>
+<P>Of course, there are other APIs that you'll likely use such as 
+waveOutSetVolume to set the line in level for recording.</P></BODY></HTML>

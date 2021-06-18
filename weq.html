@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>WinEQ</title>
+</head>
+
+<body background="kuvat/SINI2.GIF" style="font-family:'Arial, sans-serif';font-size:11pt;color:#ffffff">
+<br><br>
+<table style="position:absolute;left: 17%" width="70%" align=center border=0>
+<tr><td ><h2>WinEQ:n synty<hr></h2></td></tr> 
+<tr>
+<td>
+<img src="kuvat/favicon.ico" align=left><p class=1>WinEQ syntyi ideasta tehd&auml; reaali-aikainen graafinen taajuuskorjain, jota aloin netist&auml; l&ouml;yt&auml;mieni tietojen avulla toteuttamaan k&auml;yt&auml;nn&ouml;ss&auml; 90-luvun lopussa halutessani oppia enemm&auml;n DSP-, Delphi- ja Windowsin <br><a href="Low Level Digital Audio API.htm">Wave-API</a> -ohjelmoinnista. Pienen&auml; haavena oli ehk&auml; saada se julkaistua my&ouml;s esim. Suomen suurimman tietokonelehden Apajalla, mit&auml; saavutusta olisi sitten voinut esitell&auml; ansioluettelossa tms. yhteydess&auml;. Kaikki "projektissa" k&auml;ytetyt ohjelmat ja l&auml;hdekoodit ovat joko PD:t&auml; (Public Domain) tai ilmaisia, kuten Delphi 6 joka l&ouml;ytyi er&auml;&auml;n lehden kylki&auml;is-CD:lt&auml;, paitsi ehk&auml; Motorolan <i>Digital Stereo 10-Band Graphic Equalizer Using the DSP56001</i> -julkaisu sek&auml; Don Cross:in tekem&auml; <i>fourier.pas</i> joista en ole varma, mutta ovat/olivat kuitenkin netist&auml; vapaasti saatavilla. WinEQ:n kuvake on  Windowsin &auml;&auml;nimikserin kuvakkeesta muokattu versio.
+<br><br><br></td></tr>
+
+<tr><td ><h2>DSP:t&auml; ja Wave-API:a<hr></h2></td></tr> 
+
+<tr><td >DSP (Digital Signal Processing) tarkoittaa digitaalista signaalin k&auml;sittely&auml;, ja <a href="Low Level Digital Audio API.htm">Wave-API</a> (Application Programming Interface) Windowsin &auml;&auml;niaalto-laitteen ohjelmointirajapintaa. Graafinen taajuuskorjain eli ekvalisaattori on puolestaan laite jolla &auml;&auml;nen eri taajuusalueita voidaan joko vahvistaa tai vaimentaa liukus&auml;&auml;timill&auml;. Graafinen t&auml;ss&auml; yhteydess&auml; tarkoittaa sit&auml; ett&auml; jos liukus&auml;&auml;timien v&auml;lille vedett&auml;isin viivat, se kuvaisi suurinpiirtein &auml;&auml;nen taajuustoistok&auml;yr&auml;&auml;.<br><br><br></td></tr>
+<tr><td align=left ><a href="kuvat/weq.png" style="text-decoration:none"><img src="kuvat/eq.png" border=0 alt="S&auml;&auml;t&ouml;paneeli"></a><br><br><br><br></td></tr>
+ 
+<tr><td ><h2>Fast Fourier Transform<hr></h2></td></tr> 
+
+<tr><td >"Projektin" l&auml;ht&ouml;kohtana oli l&auml;hdekoodi <a href="fourier">fourier.pas</a>, jolla puskurillinen &auml;&auml;ni-dataa voidaan muuntaa normaalista aikaesitys-muodosta (time domain) taajuusesitys-muotoon (frequency-domain) FFT:t&auml; k&auml;ytt&auml;en. Tuloksesta voidaan piirt&auml;&auml; esim. k&auml;yr&auml;, joka kuvaa &auml;&auml;nen taajuusspektri&auml;. Esim. vahvistintesteiss&auml; esitett&auml;v&auml;t k&auml;yr&auml;t ovat t&auml;llaisia, vasemmalla matalat taajuudet ja oikealla korkeat. Puskurissa jonka koko pit&auml;&auml; olla 2<sup>n</sup>, oleva data on sijoittunut niin ett&auml; indeksiss&auml; 0 on puskurin koko tavuina ja indeksist&auml; 1 indeksiin koko/2 taajuuksien amplitudit. Korkein taajuus indeksiss&auml; koko/2 on korkeintaan 
+n&auml;ytteenottotaajuus/2, ja loput puskurista on ensimm&auml;isen puolen peilikuva. Toisena l&auml;ht&ouml;kohtana oli <a href="Sound in Delphi.htm">Sound in Delphi</a> -sivulta l&ouml;ytynyt echo.pas, joka kaiuttaa &auml;&auml;nimikserin sis&auml;&auml;ntulon ulostulolle.<br><br></td></tr>
+
+<tr><td ><a href="http://en.wikipedia.org/wiki/Fast_Fourier_transform">FFT-algoritmi</a> (Fast Fourier Transform), ja sen k&auml;ytetyin muunnos Cooley-Tukey (1965) kuitenkin tiedossa jo 1800-luvulta l&auml;htien, on tehokas algoritmi DFT:n (Discrete Fourier Transform) laskemiseen, joka puolestaan on Fourier Transform (lukumuunnos-yht&auml;l&ouml;) ja jonka kehitti ranskalainen 1700-luvulla el&auml;nyt l&auml;mm&ouml;n johtumista tutkinut matemaatikko ja fyysikko <a href="http://en.wikipedia.org/wiki/Joseph_Fourier">Jean-Baptiste Joseph Fourier</a>. Fourier Transform:illa on t&auml;rke&auml;&auml; k&auml;ytt&ouml;&auml; monella eri tieteen alalla 
+kuten matematiikassa, fysiikassa, tilastotieteess&auml;, l&auml;&auml;ketieteess&auml;, avaruustutkimuksessa, &ouml;ljynetsinn&auml;ss&auml; jms.<br><br></td></tr>  
+
+<tr><td >Alunperin ajatuksena oli siis ett&auml; WinEQ olisi reaali-aikainen, &auml;&auml;nimikserist&auml; otettu esim. CD-soittimen sis&auml;&auml;ntulo menee muokattuna samantien ulostulolle, mutta siihen <a href="fourier">fourier.pas</a> osoittautui aivan liian hitaaksi. Lis&auml;ksi jokaisen &auml;&auml;nilohkon (muistilohko) rajapintaan muodostui korvin kuultava napsahdus FFT:n signaalia muokkaavan luonteen vuoksi. Kun normaalin CD-tasoisen &auml;&auml;nen (44,1kHz) bittivirtanopeus on n. 150kt ja puskurin koko esim. 8192 tavua, niin napsahduksia oli 54 millisekunnin v&auml;lein jonka voi kuvitella v&auml;hint&auml;&auml;nkin h&auml;iritsev&auml;ksi.<br><br><br></td></tr>
+
+<tr><td ><h2>IIR ja Direct II -transform<hr></h2></td></tr> 
+
+<tr><td >Oli siis etsitt&auml;v&auml; muu ratkaisu jonka tiesin olevan olemassa, semminkin l&ouml;ydetty&auml;ni ja luettuani mm. ilmaista <a href="http://www.dspguide.com/pdfbook.htm"><i><br>The Scientist and Engineer's Guide to Digital Signal Processing</i></a> -kirjaa. Digitaalisessa &auml;&auml;nenk&auml;sittelyss&auml; k&auml;ytet&auml;&auml;n nimitt&auml;in FIR- ja IIR-suotimia, joista FIR (Finite Impulse Response) on tarkempi ja sopii k&auml;ytett&auml;v&auml;ksi &auml;&auml;nieditoreissa (Cool Edit, Wavelab) ja IIR (Infinite Impulse Response) reaali-aikaisissa sovelluksissa. Netist&auml; (kuinkas muuten) l&ouml;ytyikin sitten (my&ouml;s ilmainen) <a href="http://www.musicdsp.org/files/Audio-EQ-Cookbook.txt"><i>Audio-EQ-Cookbook</i></a> -niminen tekstitiedosto, joka sis&auml;lt&auml;&auml; kokoelman kaavoja yleisimmin k&auml;ytettyjen IIR-suotimien kertoimien laskemiseksi sijoitettavaksi muunnosyht&auml;l&ouml;&ouml;n:<br><br><h4>
+
+y[n] = (b0/a0)*x[n] + (b1/a0)*x[n-1] + (b2/a0)*x[n-2] &minus; (a1/a0)*y[n-1] &minus; (a2/a0)*y[n-2]
+
+</h4>miss&auml; x on sis&auml;&auml;ntulopuskuri, y ulostulopuskuri, n puskurin indeksi ja a sek&auml; b esilasketut kertoimet esim. kaistanp&auml;&auml;st&ouml;suotimelle. Sovellettaessa sitten 20 kpl n&auml;it&auml; yht&auml;l&ouml;it&auml;, yksi jokaista taajuusaluetta kohden ja molemmille &auml;&auml;nikanaville, nopeus parani huomattavasti vaikka ei ollutkaan viel&auml; k&auml;ytt&ouml;kelpoista reaali-aikaisuutta silm&auml;ll&auml;pit&auml;en. Vasta kun optimoin yht&auml;l&ouml;t (sek&auml; muita pullonkaulakohtia) konekielelle, prosessorin liukulukuyksikk&ouml;&auml; (FPU) hy&ouml;dynt&auml;viksi k&auml;ytt&auml;en Intelin Pentium&reg;-<a href="http://developer.intel.com/design/pentium/manuals/24319001.pdf">ohjelmointimanuaalia</a>, suorituskyvyss&auml; voitiin puhua tosiaikaisuudesta sill&auml; yhden 2-kanavaisen puskurin k&auml;sittelemiseen kului en&auml;&auml; vain 25 &micro;s ja k&auml;ytt&ouml; oli sujuvaa ja hidastelematonta 233MHz:in Pentiumissakin. Yll&auml;oleva kaava assemblerilla optimoituna:<br><br><code>asm<br>
+                &nbsp;&nbsp;FINIT<br>
+                &nbsp;&nbsp;FLD ri0<br>
+                &nbsp;&nbsp;FMUL b0_1k<br>
+                &nbsp;&nbsp;FST ri0<br>
+                &nbsp;&nbsp;FLD ri1<br>
+                &nbsp;&nbsp;FMUL b1_1k<br>
+                &nbsp;&nbsp;FST ri1<br>
+                &nbsp;&nbsp;FLD ri2<br>
+                &nbsp;&nbsp;FMUL b2_1k<br>
+                &nbsp;&nbsp;FST ri2<br>
+                &nbsp;&nbsp;FLD ro1<br>
+                &nbsp;&nbsp;FMUL a1_1k<br>
+                &nbsp;&nbsp;FST ro1<br>
+                &nbsp;&nbsp;FLD ro2<br>
+                &nbsp;&nbsp;FMUL a2_1k<br>
+                &nbsp;&nbsp;FST ro2<br>
+                &nbsp;&nbsp;FLD ri0<br>
+                &nbsp;&nbsp;FADD ri1<br>
+                &nbsp;&nbsp;FADD ri2<br>
+                &nbsp;&nbsp;FSUB ro1<br>
+                &nbsp;&nbsp;FSUB ro2<br>
+                &nbsp;&nbsp;FST sro<br>
+            end;</code><br><br></td></tr>  
+
+<tr><td >Koska yht&auml;l&ouml;ss&auml; esiintyv&auml;t n-1 ja n-2 viittaavat k&auml;sittelyss&auml; olevan n&auml;ytteen edelt&auml;vi&auml; n&auml;ytteit&auml;, joita ei per&auml;kk&auml;isten puskurien v&auml;lisess&auml; rajapinnassa ole en&auml;&auml; k&auml;yt&ouml;ss&auml;, h&auml;iritsev&auml;t napsahdukset kuuluivat yh&auml; &auml;&auml;ness&auml;. Ratkaisu ongelmaan l&ouml;ytyi Motorolan <a href="http://www.harmony-central.com/Computer/Programming/apr2-d.pdf"><i>Digital Stereo 10-Band Graphic Equalizer Using the DSP56001</i></a> -julkaisusta, jossa k&auml;ytet&auml;&auml;n (my&ouml;s yleisestikin k&auml;yt&ouml;ss&auml; olevaa) tekniikkaa nimelt&auml;&auml;n circular-buffer, miss&auml; n&auml;ytteet kierr&auml;tet&auml;&auml;n kolmen n&auml;ytteen kokoisessa puskurissa ja k&auml;ytett&auml;viss&auml; on aina n&auml;yte n, n-1 ja n-2.<br><br><br></td></tr> 
+
+<tr><td align=left><img border=0 src="kuvat/cb.png"><br><br><small>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sovelletut kohdat merkitty</small><br><br><br></td></tr>
+  
+<tr><td ><h2>Lis&auml;ominaisuuksia<hr></h2></td></tr> 
+
+<tr><td >Kun em. toiminnalliset ongelmat oli ratkaistu, aloin lis&auml;&auml;m&auml;&auml;n joitain lis&auml;ominaisuuksia WinEQ:n kuten preset-tiedostot, analogiset VU-mittarit, gain-s&auml;&auml;timen (vahvistus), parametrisi&auml; ominaisuuksia ja viimeisimp&auml;n&auml; phaser-efektin, &auml;&auml;ni-tiedoston toiston sek&auml; LED-mittarit. VU-mittari (Voltage Unit) on jo 40-luvulla kehitetty mittari, jolla voidaan tarkkailla signaalin voimakkuutta erityisesti &auml;&auml;nitett&auml;ess&auml;. WinEQ:ssa niill&auml; voi tarkkailla my&ouml;s tasoa, ja n&auml;ytett&auml;v&auml;t arvot lasketaan kaavalla 20*log10(ka/32768) miss&auml; ka=keskiarvo puskurin n&auml;ytteist&auml;.<br><br></td></tr>
+
+<tr><td align=left ><img border=0 src="kuvat/vu.png" width="491" height="221" border="0" alt="VU-meters">&nbsp;&nbsp;<img border=0 src="kuvat/led.png" width="81" height="238" border="0" alt="LED-meters" hspace=15><br><br><hr size=1><br></td></tr>  
+
+<tr><td colspan=2><img align=left src="kuvat/q.png" border="0"><img align=left src="kuvat/slope.png" border="0" hspace=25>Parametrisuudella tarkoitetaan ett&auml; suotimien parametrej&auml;, kuten Q-arvoa, voidaan s&auml;&auml;t&auml;&auml;. Q-arvo on elektroniikassa k&auml;ytett&auml;v&auml; termi jolla tarkoitetaan kelan hyvyytt&auml; (Quality), eli mit&auml; suurempi Q-arvo sit&auml; pienemm&auml;t sen h&auml;vi&ouml;t. Digitaalisissa suotimissa Q-arvo ei tarkoita aivan samaa, koska ne ovat k&auml;yt&auml;nn&ouml;ss&auml; h&auml;vi&ouml;tt&ouml;mi&auml;, vaan se kertoo suotimen vaikutusalueen ts. kuinka leve&auml; tai kapea (tai jyrkk&auml; tai loiva riippuen suodintyypist&auml;) suotimen vastek&auml;yr&auml; on.<br><br><br></td></tr>
+
+<tr><td align=left><br><b>Digitaalisen suotimen vastek&auml;yr&auml;</b><br><br><a href="kuvat/fr.bmp"><img align=middle src="kuvat/fr.bmp" width="50%" height="50%" border="0" alt="Vastek&auml;yr&auml;"></a>&nbsp;&nbsp;&nbsp;V&nbsp;a&nbsp;h&nbsp;v&nbsp;i&nbsp;s&nbsp;t&nbsp;u&nbsp;s&nbsp;(&nbsp;d&nbsp;B&nbsp;)<br><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;T&nbsp;a&nbsp;a&nbsp;j&nbsp;u&nbsp;u&nbsp;s&nbsp;&nbsp;(&nbsp;H&nbsp;z&nbsp;)<br><br><br>Tekem&auml;ni <a href="Fr.exe">Delphi-ohjelma</a> jolla voi tutkia WinEQ:n vastek&auml;yri&auml;<br><br><hr size=1><br></td></tr>
+
+<tr><td colspan=2><img src="kuvat/gain.png" width="32" height="19" border="0" align="bottom">-s&auml;&auml;din s&auml;&auml;t&auml;&auml; vahvistusta/vaimennusta kaavalla n&auml;yte*10<sup>&plusmn;(dB/20)</sup>, jossa dB on s&auml;&auml;timest&auml; saatava arvo.<br><br><br><img src="kuvat/phaser.png" align=top width="84" height="58" border="0">-efektiin l&ouml;ytyi tietoa <a href="http://www.harmony-central.com/Effects/Articles/Phase_Shifting/">Harmony Central</a> ja <a href="http://www.musicdsp.org/">music-dsp.org</a> -sivustoilta.<br><br><hr size=1><br></td></tr>
+
+<tr><td>Lopuksi tein WinEQ:lle viel&auml; <a href="setup.exe">asennuspaketin</a> ilmaisella <a href="http://www.jrsoftware.org/isinfo.php">Inno Setup</a> -asennusohjelmistolla.<br><br></td></tr>
+
+<tr><td><a href="weq.rar">WinEQ:n l&auml;hdekoodit</a><br><br><br><br><br></td></tr>
+</table>
+
+
+
+</body>
+</html>

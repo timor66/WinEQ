@@ -1,0 +1,250 @@
+<html>
+<head>
+<title>Sound in Delphi</title>
+</head><body BGCOLOR="white">
+<img SRC="00000000.gif" ALT="00000000.gif" BORDER="0" WIDTH="15" HEIGHT="15"><b>  The Unofficial Newsletter of Delphi Users - Issue #23 - September 1997
+<hr>
+<p>
+
+<p>
+<img SRC="00000036.gif" ALT="00000036.gif" BORDER="0" WIDTH="163" HEIGHT="183">
+<p>
+Playing and Recording Sound in Delphi
+<p>
+<i>by Dr Darryl Gove - D.J.Gove@open.ac.uk
+<p>
+<a HREF="http://www.maths.soton.ac.uk/~djg/djgmain.htm">http://www.maths.soton.ac.uk/~djg/djgmain.htm</a>
+<p>
+</i></b><i></i>Recently I was wondering about how to play and record sound, up until then my experience had been with using the TMediaPlayer to play a .WAV or a .AVI file. Its a nice component, but I was thinking perhaps I could record sound in my own format and play it back. Id looked at the Windows documentation and only found the play sound command - not very useful, however tucked away in the Delphi/Bin directory there is a file called mmsystem.hlp; the file tells you everything you need to know, or at least it does if you already know what youre doing. I didnt, but I was fortunate enough to find a web-site ( <a HREF="http://www.relisoft.com/recorder.html">http://www.relisoft.com/recorder.html</a>) which had the code for a sound recorder in C++, this gave me sufficient details to get the program working.
+<p>
+Now, I use Delphi 1.0, so thats my excuse for avoiding multi-threaded applications. Ill leave the translation as an exercise to the reader.
+<p>
+Actually, when it comes down to it, playing and recording sound is very similar, so rather than write a long article treating both separately, Im going to write about both at the same time - and hope that Im clear enough to make it easy for you to follow.
+<p>
+<b>Do <i>you</i> have a soundcard?
+<p>
+</b>The first thing that youll need to do when writing an audio application is to handle the possibility that the computer the application is running on does not have a soundcard. 
+<p>
+To do this we need to use the calls WaveOutGetNumDevs and WaveInGetNumDevs - they return the number of audio playing devices (Out) and the number of recording devices (In). Most of the time there will be one of each - one soundcard.
+<p>
+
+<p>
+<pre>if WaveOutGetNumDevs=0 then application.messagebox('Error', 'No sound playing card', mb_OK);
+if waveInGetNumDevs=0 then application.messagebox('Error','No recording sound card',mb_ok);
+
+</pre>The best place for this code would probably be in the On Create handler for the form, however before you compile the code, make sure that you have included mmsystem in the uses list.
+<p>
+<b>What kind of sound do you want?
+<p>
+</b>You should be aware that there is a variety of options for sound quality - whether it is mono or stereo, 8 or 16 bit, and the sampling frequency. You need to ask the soundcard whether it supports the format.
+<p>
+The basic wave format information is handled by the TWaveFormat block
+<p>
+
+<p>
+<pre>TWaveFormat = record
+    wFormatTag: Word;         {format type}
+    nChannels: Word;          {number of channels 1 for mono 2 for stereo}
+    nSamplesPerSec: Longint;  {sample rate}
+    nAvgBytesPerSec: Longint; {number of bytes per second recorded}
+    nBlockAlign: Word;        {size of a single sample}
+  end;
+
+</pre>However, you wont directly use this, since you need to use a wrapper which relates to the particular format that you want to store the data in - basically you dont only ask Do you support this sample rate etc? but ask Do you support this way of saving the data?. The only really supported format is PCM, but potentially there could be other formats supported by the multimedia subsystem, and you as a programmer would not need to worry about them.
+<p>
+In order to ask about PCM data, you need to use the TPCMWaveFormat block:
+<p>
+
+<p>
+<pre>TPCMWaveFormat = record
+   wf: TWaveFormat;
+   wBitsPerSample: Word;
+end;
+
+</pre>Which is just the TWaveFormat block with an additional word telling the computer the bits per sample (8,16, or 32). Each sample (the number of samples per second is the sampling frequency) is either 8 bit or 16 bit, and either stereo or mono - so the smallest size is 8 bit mono or 8 bits per sample, and the largest size is 16 bit stereo or 32 bits per sample. This calculation follows directly from the data you specify in the TWaveFormat block - so besides questions of why do you need to tell the computer again, well have a look at setting up the TWaveFormat block:
+<p>
+
+<p>
+<pre>WaveFormat:=new(PPCMwaveFormat);
+with WaveFormat^.wf do
+  begin
+    WFormatTag := WAVE_FORMAT_PCM; {PCM format - the only option!}
+    NChannels:=1; {mono}
+    NSamplesPerSec:=11000; {11kHz sampling}
+    NAvgBytesPerSec:=11000; {we aim to use 8 bit sound so only 11k per second}
+    NBlockAlign:=1; {only one byte in each sample}
+    waveformat^.wBitsPerSample:=8; {8 bits in each sample}
+  end;
+
+</pre>So weve set up the type of audio we want to record, the next thing to do is to ask the soundcard if it can do it.
+<p>
+
+<p>
+<pre>i:=waveOutOpen(nil,0,PWaveFormat(WaveFormat),0,0,WAVE_FORMAT_QUERY);
+if i&lt;&amp;gt0 then 
+  application.messagebox('Error', 'Play format not supported', mb_OK);
+
+i:=waveInOpen(nil,0,PWaveFormat(WaveFormat),0,0,WAVE_FORMAT_QUERY);
+if i&lt;&amp;gt0 then 
+  application.messagebox('Error', 'Record format not supported', mb_OK);
+
+<b></b></pre><b>Getting a handle on it.
+<p>
+</b>Like most things in Windows, we end up referring to the soundcard using a handle; we need one handle to record and one to playback. 
+<p>
+Having set up our WaveFormat block, we can ask for a handle to a device that can either play or record that format.
+<p>
+
+<p>
+<pre>HwaveOut:=new(PHwaveOut);
+i:=waveOutOpen(HWaveOut,0,Pwaveformat(WaveFormat),form1.handle,0,CALLBACK_WINDOW);
+if i&lt;&amp;gt0 then 
+  application.messagebox('Error', 'Problem creating play handle', mb_OK);
+
+HwaveIn:=new(PHwaveIn);
+i:=waveInOpen(HWaveIn,0,Pwaveformat(WaveFormat),form1.handle,0,CALLBACK_WINDOW);
+if i&lt;&amp;gt0 then
+  application.messagebox('Error', 'Problem creating record handle', mb_OK);
+
+</pre>In this instance, were going to use the messages to handle the playback and recording of audio. We could use a callback function. To use messages, we need to pass the handle of a window that will receive the messages, and the CALLBACK_WINDOW value to tell the multimedia subsystem that were passing a handle to it.
+<p>
+<b>Being prepared
+<p>
+</b>The final thing to do is to start either playing sound or recording sound. To do this we need to send packets of memory to the sound card either to play or to record on.
+<p>
+When you send data out to be played, the playing starts immediately you add a packet of data, extra packets of data are added to a queue, and played in sequence. If youre recording then the blocks of memory are once again added to a queue - but they are not recorded on until you tell the computer to start recording. If the computer runs out of packets to record on then the recording stops.
+<p>
+So the first thing to do is to get a block of memory and to set up the data block that will tell the multimedia subsystem about it.
+<p>
+
+<p>
+<pre>Tmemblock=array[0..memblocklength] of byte;
+memBlock:=new(PmemBlock);
+
+</pre>Nows a good time to put your audio data into the memory block - if youre playing audio.
+<p>
+
+<p>
+<pre>Header:=new(PwaveHdr);
+with header^ do
+  begin
+    lpdata:=pointer(memBlock);
+    dwbufferlength:=memblocklength;
+    dwbytesrecorded:=0;
+    dwUser:=0;
+    dwflags:=0;
+    dwloops:=0;
+  end;
+
+</pre>Except for setting the pointer to a block of memory, and the length of the block of memory, all the other fields should be set to zero - unless you want to play the same block of data multiple times.
+<p>
+The next step is to prepare the data, why this is necessary, I dont know!
+<p>
+
+<p>
+<pre>i:=waveOutPrepareHeader(HWaveOut^,Header,sizeof(TWavehdr));
+if i&lt;&amp;gt0 then 
+  application.messagebox('Out Prepare error','error',mb_ok);
+
+i:=waveInPrepareHeader(HWaveIn^,Header,sizeof(TWavehdr));
+if i&lt;&amp;gt0 then
+  application.messagebox('In Prepare error','error',mb_ok);
+
+</pre>Then we need to send the new block of data to the audio device - either to be played or to be recorded on. 
+<p>
+
+<p>
+<pre>i:=waveOutWrite(HWaveOut^,Header,sizeof(TWaveHdr));
+if i&lt;&amp;gt0 then
+  application.messagebox('Wave out error','error',mb_ok);
+
+i:=waveInAddBuffer(HWaveIn^,Header,sizeof(TWaveHdr));
+if i&lt;&amp;gt0 then
+  application.messagebox('Add buffer error','error',mb_ok);
+
+</pre>The final thing to do when recording sound is to start!
+<p>
+
+<p>
+<pre>i:=waveInStart(HwaveIn^);
+if i&lt;&amp;gt0 then
+   application.messagebox('Start error','error',mb_ok);
+
+</pre>There are also commands to stop and pause recording.
+<p>
+<b>Messages
+<p>
+</b>If youre using messages to control the recording an playback of audio, then you need to have some handlers for the messages. The handlers should be something like
+<p>
+
+<p>
+<b><pre>procedure</pre></b><pre> MMOutOpen(<b>var</b> msg: Tmessage); <b>message</b> MM_WOM_OPEN;
+<b>procedure</b> MMOutClose(<b>var</b> msg: Tmessage); <b>message</b> MM_WOM_CLOSE;
+<b>procedure</b> MMOutDone(<b>var</b> msg: Tmessage); <b>message</b> MM_WOM_DONE;
+<b>procedure</b> MMInOpen(<b>var</b> msg: Tmessage); <b>message</b> MM_WIM_OPEN;
+<b>procedure</b> MMInClose(<b>var</b> msg: Tmessage); <b>message</b> MM_WIM_CLOSE;
+<b>procedure</b> MMInDone(<b>var</b> msg: Tmessage); <b>message</b> MM_WIM_DATA;
+
+</pre>WOM messages are send by audio out devices, and WIM messages are sent by audio in devices.
+<p>
+The open and close messages are sent when the device is either opened or closed (closing is covered in the next section) - these are not really very useful messages to trap. The important messages are the DONE and DATA. 
+<p>
+MM_WOM_DONE tells you that the block of data that you were playing has been played, and you should now get rid of it. MM_WIM_DATA tells you that the block of data has been recorded on and you should now deal with it as appropriate. For both messages, youll probably want to send some more data to the audio device.
+<p>
+The first thing to do with your returned data is to unprepare it, a pointer to the header that identifies the block is passed as the lparam of the message.
+<p>
+
+<p>
+<pre>Header:=PWaveHdr(msg.lparam);
+i:=waveOutUnPrepareHeader(HWaveOut^,Header,sizeof(TWavehdr));
+if i&lt;&amp;gt0 then
+  application.messagebox('Out Un Prepare error','error',mb_ok);
+
+Header:=PWaveHdr(msg.lparam);
+i:=waveInUnPrepareHeader(HWaveIn^,Header,sizeof(TWavehdr));
+if i&lt;&amp;gt0 then
+  application.messagebox('In Un Prepare error','error',mb_ok);
+
+</pre>You can then do as you will with the block of data, but remember to dispose of any memory that you dont want any more.
+<p>
+
+<p>
+<pre>dispose(Header^.lpdata);
+dispose(Header);
+
+<b></b></pre><b>Disposing of the evidence.
+<p>
+</b>Once weve finished with the soundcard, we need to get rid  of the handle to audio device. Before we can do that, we need to reset the device so that any unused buffers are returned to the application for disposal. 
+<p>
+
+<p>
+<pre>if HWaveOut&lt;&amp;gtnil then WaveOutReset(HWaveOut^);
+if HwaveOut&lt;&amp;gtnil then WaveOutClose(HWaveOut^);
+
+if HwaveIn&lt;&amp;gtnil then WaveInReset(HWaveIn^);
+if HwaveIn&lt;&amp;gtnil then WaveInClose(HWaveIn^);
+
+</pre>Notice that the multimedia subsystem sometimes requires a pointer to a handler, and sometimes a handler - just one of those things.
+<p>
+A problem youll find if you try this code, is that the reset is asynchronous so you reset the audio device, and close it - then your handler gets called with a block of data that needs to be unprepared, of course the handle you had is invalid now, and so you get a GPF if you use it (well you dont seem to but Im not prepared to take that kind of a risk). So to get around this count the number of packets sent to the audio device, and only execute the close when there are no remaining packets - you can do this in the handler that deals with returned packets of data.
+<p>
+<b>The example program
+<p>
+</b>The listing is a complete program for recording audio and playing it directly back to the speaker - an echo! To use it make a blank form, with an On Create and a Close Query handler, then replace the entire unit with the code in the listing. Its written for Delphi 1, but I would expect it to work with Delphi 2.
+<p>
+Note: The code given uses a sampling rate of 11,000 samples per second; not all sound cards can support this rate. If your sound card does not support it, then you will need to adjust the rate to 11,025 samples per second, which should be supported.
+<p>
+<b>Conclusion
+<p>
+</b>Using the sound card at a low level to record and playback audio, feels like it should be  really complex, but in fact it isnt&#133; thats the power of the Windows API. However there are a number of quirks in it, but its fun!
+<p>
+
+<p>
+<a HREF="00000038.htm">Source Code for Project</a>
+<p>
+<a HREF="00000003.htm">Return to Tips &amp; Tricks</a>
+<p>
+<a HREF="Dn970901.htm">Return to Front Page</a>
+<p>
+</body>
+</html>
