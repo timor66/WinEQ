@@ -7,3 +7,5 @@ Made with Delphi Pascal.
 
 ![](https://github.com/timor66/WinEQ/blob/main/img/vu.png)
 
+![](https://github.com/timor66/WinEQ/blob/main/img/fr.png)
+
